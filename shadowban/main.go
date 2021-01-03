@@ -3,6 +3,7 @@ package shadowban
 import (
 	"os"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
@@ -39,6 +40,8 @@ func Checker(done chan bool) {
 			break
 		}
 	}
+
+	time.Sleep(3 * time.Second)
 
 	done <- true
 }
