@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const toolVersion string = "0.3.0"
 var log = logrus.New()
 
 func initLogs() {

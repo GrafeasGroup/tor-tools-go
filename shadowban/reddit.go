@@ -12,7 +12,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const toolVersion string = "0.2.1"
 const toolAuthor string = "u/personal_opinions"
 
 func getUserAgent() string {
