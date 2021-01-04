@@ -2,10 +2,11 @@ package shadowban
 
 import (
 	"fmt"
-	// golog "log"
 	// "io/ioutil"
 	"math/rand"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -18,13 +19,50 @@ func getUserAgent() string {
 	return fmt.Sprintf("golang:tor-tools-go/shadowbanned:v%s (by %s)", toolVersion, toolAuthor)
 }
 
+func getMinPollTime() int {
+	value := os.Getenv("MIN_POLL_TIME")
+
+	if value == "" {
+		return 30  // Default min: 30 seconds
+	}
+
+	i, _ := strconv.Atoi(value)
+
+	return i
+}
+
+func getMaxPollTime() int {
+	value := os.Getenv("MAX_POLL_TIME")
+
+	if value == "" {
+		return 300 // Default max: 5 minutes
+	}
+
+	i, _ := strconv.Atoi(value)
+
+	return i
+}
+
+func randomJitter() {
+	minPoll := getMinPollTime()
+	maxPoll := getMaxPollTime()
+	randTop := maxPoll - minPoll
+
+	if randTop < 0 {
+		panic("given minimum poll time is greater than given maximum poll time")
+	}
+
+	// Default: sleep for anywhere from 30 seconds to 5 minutes
+	time.Sleep(time.Duration(rand.Intn(randTop) + minPoll) * time.Second)
+}
+
 func watchUsername(username string, banned chan<- string) {
 	client := &http.Client{}
 	var isBanned bool
 	var err error
 
 	for {
-		time.Sleep(time.Duration(rand.Intn(10)) * time.Second)
+		randomJitter()
 
 		isBanned, err = isShadowBanned(client, username)
 		if err != nil {
@@ -52,7 +90,8 @@ func isShadowBanned(client *http.Client, username string) (bool, error) {
 	// body, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
 	// if err != nil {
-	// 	golog.Fatal(err)
+	// 	log.Error(err)
+	// 	panic("ERROR")
 	// }
 
 	log.WithFields(logrus.Fields{
